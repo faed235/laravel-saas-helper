@@ -10,15 +10,15 @@
   "autoload": {
     "psr-4": {
       "Faed\\LaravelSaasHelper\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "HyperfTest\\": "tests"
     },
     "files": [
       "src/Helper.php"
     ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "HyperfTest\\": "tests"
+    }
   },
   "require": {
     "php": ">=7.3",
