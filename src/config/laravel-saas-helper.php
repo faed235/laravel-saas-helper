@@ -23,5 +23,6 @@ return [
 
     'log'=>[
         'http_channel'=>'http',
+        'extra_headers_to_log'=>[],
     ]
 ];

@@ -14,12 +14,15 @@ class HttpLogMiddleware
     public function handle(Request $request, Closure $next){
         $startTime = microtime(true);
         $userId = auth()->id();
-        $this->logRequest($request, $userId);
+        $additionalData = $this->getAdditionalRequestData($request); // 获取额外参数
+
+
+        $this->logRequest($request, $userId,$additionalData);
 
         $response = $next($request);
 
         $executionTime = $this->calculateExecutionTime($startTime);
-        $this->logResponse($request, $response, $executionTime, $userId);
+        $this->logResponse($request, $response, $executionTime, $userId,$additionalData);
 
         $this->handleSlowRequest($request, $executionTime, $userId);
 
@@ -27,26 +30,26 @@ class HttpLogMiddleware
     }
 
 
-    protected function logRequest(Request $request, $userId): void
+    protected function logRequest(Request $request, $userId,array $additionalData = []): void
     {
-        Log::channel(config('laravel-saas-helper.log.http_channel'))->info('请求', [
+        Log::channel(config('laravel-saas-helper.log.http_channel'))->info('Request', array_merge($additionalData,[
             'host'=>$request->getSchemeAndHttpHost(),
-            '请求url'=>$request->getRequestUri(),
-            '路由'=>$request->route()->uri(),
-            '方式'=>$request->method(),
-            '体'=>$request->input(),
-            '用户'=>$userId,
-        ]);
+            'uri'=>$request->getRequestUri(),
+            'route'=>$request->route()->uri(),
+            'method'=>$request->method(),
+            'body'=>$request->input(),
+            'user'=>$userId,
+        ]));
     }
 
-    protected function logResponse(Request $request, $response, float $executionTime, $userId): void
+    protected function logResponse(Request $request, $response, float $executionTime, $userId,array $additionalData = []): void
     {
-        Log::channel(config('laravel-saas-helper.log.http_channel'))->info('响应', [
-            '执行时间'=>$executionTime,
-            '路由'=>$request->route()->uri(),
-            '用户'=>$userId,
-            '状态'=>$response->getStatusCode(),
-        ]);
+        Log::channel(config('laravel-saas-helper.log.http_channel'))->info('Response', array_merge($additionalData,[
+            'time'=>$executionTime,
+            'route'=>$request->route()->uri(),
+            'user'=>$userId,
+            'code'=>$response->getStatusCode(),
+        ]));
     }
 
     protected function calculateExecutionTime(float $startTime): float
@@ -76,4 +79,15 @@ class HttpLogMiddleware
             'trace' => AppendRequestIdProcessor::getOrSet(),
         ]);
     }
+
+    protected function getAdditionalRequestData(Request $request): array
+    {
+        $data = [];
+        foreach (config('laravel-saas-helper.log.extra_headers_to_log', []) as $value) {
+            $data[$value] = $request->header($value);
+        }
+        return $data;
+    }
+
+
 }
