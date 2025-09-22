@@ -1,6 +1,7 @@
 <?php
 namespace Faed\LaravelSaasHelper;
 
+use Faed\LaravelSaasHelper\commands\FaedParameterCommand;
 use Illuminate\Support\ServiceProvider;
 class LaravelSaasHelperServiceProvider extends ServiceProvider
 {
@@ -14,7 +15,7 @@ class LaravelSaasHelperServiceProvider extends ServiceProvider
         //发布cli命令行
         if ($this->app->runningInConsole()) {
             $this->commands([
-
+                FaedParameterCommand::class,
             ]);
         }
 
