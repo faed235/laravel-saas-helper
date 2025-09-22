@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder fieldDate($value,string $field = 'created_at')
  * @method static Builder startTime($value,string $field = 'created_at')
  * @method static Builder endTime($value,string $field = 'created_at')
+ * @method static Builder searchHas($link,$value,string $field)
  */
 trait ModelHelper
 {
@@ -66,5 +67,14 @@ trait ModelHelper
     public function scopeSearchTime(Builder $builder,$startTime = null , $endTime = null, string $field = 'created_at')
     {
         return $builder->startTime($startTime,$field)->endTime($endTime,$field);
+    }
+
+    public function scopeSearchHas(Builder $builder,$link,$value, $field)
+    {
+        return $builder->when($value,function (Builder $builder) use ($link,$value,$field){
+            return $builder->whereHas($link,function (Builder $builder) use ($value,$field){
+                $builder->where($field,$value);
+            });
+        });
     }
 }
