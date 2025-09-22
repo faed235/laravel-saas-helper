@@ -46,8 +46,10 @@
     "cs-fix": "php-cs-fixer fix $1"
   },
   "extra": {
-    "hyperf": {
-      "config": "Faed\\LaravelSaasHelper\\ConfigProvider"
+    "laravel": {
+      "providers": [
+        "Faed\\LaravelSaasHelper\\LaravelSaasHelperServiceProvider"
+      ]
     }
   }
 }
