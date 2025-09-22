@@ -1,8 +1,8 @@
 <?php
 namespace Faed\LaravelSaasHelper;
 
-use Faed\LaravelSaasHelper\commands\FaedApifoxCommand;
-use Faed\LaravelSaasHelper\commands\FaedParameterCommand;
+use Faed\LaravelSaasHelper\command\FaedApifoxCommand;
+use Faed\LaravelSaasHelper\command\FaedParameterCommand;
 use Illuminate\Support\ServiceProvider;
 class LaravelSaasHelperServiceProvider extends ServiceProvider
 {

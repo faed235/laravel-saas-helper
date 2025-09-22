@@ -1,6 +1,6 @@
 <?php
 
-namespace Faed\LaravelSaasHelper\commands;
+namespace Faed\LaravelSaasHelper\command;
 
 use DirectoryIterator;
 use GuzzleHttp\Client;
