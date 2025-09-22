@@ -11,7 +11,12 @@ class LaravelSaasHelperServiceProvider extends ServiceProvider
             $this->configPath() => config_path('laravel-saas-helper.php'),
         ]);
 
+        //发布cli命令行
+        if ($this->app->runningInConsole()) {
+            $this->commands([
 
+            ]);
+        }
 
     }
 
