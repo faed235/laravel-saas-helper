@@ -6,10 +6,33 @@ class AppendRequestIdProcessor
     {
         $logger->pushProcessor(function ($record) {
             // 从请求属性中获取 request_id
-            $requestId = request()->attributes->get('request_id', 'unknown');
+            $requestId = self::getOrSet();
             $record['message'] = '['.$requestId.']'.$record['message'];
             return $record;
         });
+    }
+
+
+    /**
+     * @return mixed|string
+     */
+    public static function getOrSet()
+    {
+        if (!($requestId = request()->attributes->get('request_id'))) {
+            $requestId = uniqid();
+            self::setRequestId($requestId);
+        }
+        return $requestId;
+    }
+
+
+    /**
+     * @param $requestId
+     * @return void
+     */
+    public static function setRequestId($requestId)
+    {
+        request()->attributes->set('request_id',$requestId);
     }
 }
 
