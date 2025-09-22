@@ -33,7 +33,6 @@ class HttpLogMiddleware
     protected function logRequest(Request $request, $userId,array $additionalData = []): void
     {
         Log::channel(config('laravel-saas-helper.log.http_channel'))->info('Request', array_merge($additionalData,[
-            'host'=>$request->getSchemeAndHttpHost(),
             'uri'=>$request->getRequestUri(),
             'route'=>$request->route()->uri(),
             'method'=>$request->method(),
@@ -46,6 +45,7 @@ class HttpLogMiddleware
     {
         Log::channel(config('laravel-saas-helper.log.http_channel'))->info('Response', array_merge($additionalData,[
             'time'=>$executionTime,
+            'uri'=>$request->getRequestUri(),
             'route'=>$request->route()->uri(),
             'user'=>$userId,
             'code'=>$response->getStatusCode(),
