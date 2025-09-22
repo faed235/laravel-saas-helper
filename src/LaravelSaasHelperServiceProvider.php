@@ -2,6 +2,7 @@
 namespace Faed\LaravelSaasHelper;
 
 use Faed\LaravelSaasHelper\command\FaedApifoxCommand;
+use Faed\LaravelSaasHelper\command\FaedControllerCommand;
 use Faed\LaravelSaasHelper\command\FaedParameterCommand;
 use Illuminate\Support\ServiceProvider;
 class LaravelSaasHelperServiceProvider extends ServiceProvider
@@ -16,6 +17,7 @@ class LaravelSaasHelperServiceProvider extends ServiceProvider
         //发布cli命令行
         if ($this->app->runningInConsole()) {
             $this->commands([
+                FaedControllerCommand::class,
                 FaedParameterCommand::class,
                 FaedApifoxCommand::class,
             ]);
