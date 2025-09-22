@@ -53,3 +53,13 @@ if (!function_exists('generateDateRange')){
         return $date;
     }
 }
+
+if (!function_exists('getCurrentUserName')){
+    function getCurrentUserName(): string
+    {
+        if (auth()->user()){
+            return auth()->user()->actual_name?:auth()->user()->nickname;
+        }
+        return '系统';
+    }
+}
