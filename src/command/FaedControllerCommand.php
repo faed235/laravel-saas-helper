@@ -46,7 +46,7 @@ class FaedControllerCommand extends Command
     {
         $name = $this->argument('name');
         Artisan::call('make:controller', ['name' =>"{$name}Controller",'--api' => true]);
-        Artisan::call('make:controller', ['name' =>"{$name}Request"]);
+        Artisan::call('make:request', ['name' =>"{$name}Request"]);
         return 0;
     }
 }
