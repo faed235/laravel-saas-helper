@@ -17,7 +17,7 @@ class ThrottleDebounceMiddleware
             }
             // 或 $this->antiRepeatTime('custom_unique_id', 5); // 自定义唯一 ID，防抖 5 秒
         } catch (CustomException $e) {
-            return response()->json(['code' => 429, 'message' => $e->getMessage()]);
+            throw new CustomException($e->getMessage());
         }
 
         return $next($request);
