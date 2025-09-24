@@ -16,6 +16,6 @@ class CustomException extends \RuntimeException
     public function render($request): JsonResponse
     {
         Log::error($this->getMessage(),['msg' => $this->getMessage(), 'file' => $this->getFile(), 'line' => $this->getLine()]);
-        return response()->json(array_filter(['error'=>$this->getMessage(),'code'=>999999,'trace'=>AppendRequestIdProcessor::getOrSet()]),400);
+        return response()->json(array_filter(['error'=>$this->getMessage(),'code'=>999999,'trace'=>AppendRequestIdProcessor::getOrSet()]),400,[],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     }
 }
