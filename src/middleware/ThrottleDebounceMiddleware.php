@@ -45,7 +45,7 @@ class ThrottleDebounceMiddleware
             $parameter = request()->input();
             $uri = request()->getRequestUri();
 
-            $filteredParams = array_except($parameter, ['ab_ac', 'group_uniqid']); // 过滤无关参数
+            $filteredParams = array_except($parameter, ['group_uniqid']); // 过滤无关参数
 
             $md5 = md5($uri . '-' . request()->method() . '-' . json_encode($filteredParams));
 
