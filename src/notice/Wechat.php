@@ -33,12 +33,12 @@ class Wechat
 
     private static function getUri(string $level): string
     {
-        return config('hyperf-saas-helper.sys_notice.wechat')[$level] ?? '';
+        return config('laravel-saas-helper.sys_notice.wechat')[$level] ?? '';
     }
 
     private static function request($url,$data): array
     {
-        if (!config('hyperf-saas-helper.sys_notice.wechat.enable')){
+        if (!config('laravel-saas-helper.sys_notice.wechat.enable')){
             return [];
         }
         if (!$url){
