@@ -34,5 +34,14 @@ class AppendRequestIdProcessor
     {
         request()->attributes->set('request_id',$requestId);
     }
+
+    public static function exceptionFormat($exception, array $other = []): array
+    {
+        return array_merge($other, [
+            'msg' => $exception->getMessage(),
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+        ]);
+    }
 }
 
