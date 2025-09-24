@@ -38,7 +38,7 @@ class Wechat
 
     private static function request($url,$data): array
     {
-        if (!env('WECHAT_ENABLE')){
+        if (!config('hyperf_saas_helper.sys_notice.wechat.enable')){
             return [];
         }
         if (!$url){
