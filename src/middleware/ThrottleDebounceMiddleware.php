@@ -8,15 +8,13 @@ use Illuminate\Support\Facades\Redis;
 
 class ThrottleDebounceMiddleware
 {
-    /**
-     * 防抖时间窗口（秒）
-     */
-    protected $debounceTime = 1; // X秒内只能请求一次
 
     public function handle(Request $request, Closure $next)
     {
         try {
-            $this->antiRepeatTime(); // 使用当前用户 ID 防抖
+            if (request()->header('repeat') || in_array($request->method(),['POST','PUT'])){
+                $this->antiRepeatTime();
+            }
             // 或 $this->antiRepeatTime('custom_unique_id', 5); // 自定义唯一 ID，防抖 5 秒
         } catch (CustomException $e) {
             return response()->json(['code' => 429, 'message' => $e->getMessage()]);
