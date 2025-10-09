@@ -1,51 +1,37 @@
 <?php
 
 declare(strict_types=1);
-
 namespace Faed\LaravelSaasHelper;
-
 use InvalidArgumentException;
 use RuntimeException;
 use JsonSerializable;
-
 /**
- * 流畅计算器类 - 支持链式调用的高精度数学运算工具
- *
- * @method self add($number) 加法
- * @method self sub($number) 减法
- * @method self multiplication($number) 乘法
- * @method self division($number) 除法
- * @method self negativeNumber() 处理负数
- * @method self abs() 绝对值
- * @method self power($exponent) 幂运算
- * @method self sqrt() 平方根
- * @method self percentage($percent) 百分比计算
- * @method self inverse() 取倒数
- *
- * @method static self init($base) 初始化计算器
- * @method static self sum(array $numbers) 数组求和
+ * 流畅接口计算器（PHP 7.2 兼容版）
+ * 支持链式调用、高精度计算（BC Math）、结果冻结、JSON 序列化
  */
 class FluentCalculator implements JsonSerializable
 {
-    // 定义允许的操作方法（用于魔术方法验证）
-    private const ALLOWED_METHODS = [
-        'add', 'sub', 'multiplication', 'division', 'negativeNumber',
-        'abs', 'power', 'sqrt', 'percentage', 'inverse'
-    ];
+    /** @var string 当前计算值（字符串形式，避免浮点精度问题） */
+    private $value;
 
-    private $base; // 使用字符串存储以保持精度（PHP 7.2 不支持 string 类型声明）
-    private $frozen = false; // 防止计算完成后被意外修改
-    private static $useBcMath = true; // 是否使用BC Math扩展
-    private static $bcMathScale = null; // BC Math的小数点精度
+    /** @var bool 是否冻结结果（禁止后续修改） */
+    private $frozen = false;
+
+    /** @var bool 是否启用 BC Math 扩展 */
+    private static $useBcMath = true;
+
+    /** @var int|null BC Math 的小数精度 */
+    private static $bcMathScale = null;
 
     /**
-     * 私有构造方法，防止直接实例化
+     * 私有构造方法（通过 init() 创建实例）
+     * @param string|int|float $value 初始值
      */
-    private function __construct($base)
+    private function __construct($value)
     {
-        $this->base = is_string($base) ? $base : (string)$base;
+        $this->value = (string)$value;
 
-        // 检查BC Math是否可用
+        // 动态检测 BC Math 是否可用
         if (self::$useBcMath && !function_exists('bcadd')) {
             self::$useBcMath = false;
         }
@@ -53,31 +39,28 @@ class FluentCalculator implements JsonSerializable
 
     /**
      * 初始化计算器
+     * @param string|int|float $value 初始值
+     * @return self
      */
-    public static function init($base): self
+    public static function init($value): self
     {
-        return new self($base);
+        return new self($value);
     }
 
     /**
-     * 设置是否使用BC Math扩展
+     * 配置 BC Math 使用
+     * @param bool $use 是否启用
+     * @param int|null $scale 计算精度（小数位数）
      */
-    public static function useBcMath(bool $use = true, ?int $scale = null): void
+    public static function useBcMath(bool $use = true, int $scale = null): void
     {
         self::$useBcMath = $use && function_exists('bcadd');
         self::$bcMathScale = $scale;
     }
 
     /**
-     * 获取当前BC Math精度设置
-     */
-    public static function getBcMathScale(): ?int
-    {
-        return self::$bcMathScale;
-    }
-
-    /**
-     * 冻结计算器，防止后续修改
+     * 冻结当前结果（禁止后续修改）
+     * @return self
      */
     public function freeze(): self
     {
@@ -86,7 +69,8 @@ class FluentCalculator implements JsonSerializable
     }
 
     /**
-     * 检查是否可修改
+     * 确保对象可修改（未冻结时抛出异常）
+     * @throws RuntimeException
      */
     private function ensureMutable(): void
     {
@@ -96,417 +80,163 @@ class FluentCalculator implements JsonSerializable
     }
 
     /**
-     * 获取BC Math计算的精度
+     * 获取 BC Math 的小数精度
+     * @return int
      */
-    private function getBcScale(): int
+    private function getScale(): int
     {
-        return self::$bcMathScale ?? 10;
+        return self::$bcMathScale !== null ? self::$bcMathScale : 10;
     }
 
     /**
-     * 标准化数字输入
+     * 标准化输入值为字符串
+     * @param string|int|float $number
+     * @return string
      */
-    private function normalizeNumber($number): string
+    private function normalize($number): string
     {
-        return is_string($number) ? $number : (string)$number;
+        return (string)$number;
     }
 
-    /**
-     * 执行高精度加法
-     */
-    private function bcAdd(string $left, string $right): string
-    {
-        return self::$useBcMath
-            ? bcadd($left, $right, $this->getBcScale())
-            : (string)($left + $right);
-    }
-
-    /**
-     * 执行高精度减法
-     */
-    private function bcSub(string $left, string $right): string
-    {
-        return self::$useBcMath
-            ? bcsub($left, $right, $this->getBcScale())
-            : (string)($left - $right);
-    }
-
-    /**
-     * 执行高精度乘法
-     */
-    private function bcMul(string $left, string $right): string
-    {
-        return self::$useBcMath
-            ? bcmul($left, $right, $this->getBcScale())
-            : (string)($left * $right);
-    }
-
-    /**
-     * 执行高精度除法
-     */
-    private function bcDiv(string $left, string $right): string
-    {
-        if ($right === '0') {
-            throw new InvalidArgumentException('除数不能为零');
-        }
-        return self::$useBcMath
-            ? bcdiv($left, $right, $this->getBcScale())
-            : (string)($left / $right);
-    }
+    // ------- 基础运算方法 -------
 
     /**
      * 加法
+     * @param string|int|float $number
+     * @return self
      */
     public function add($number): self
     {
         $this->ensureMutable();
-        $this->base = $this->bcAdd($this->base, $this->normalizeNumber($number));
+        $normalized = $this->normalize($number);
+        $this->value = self::$useBcMath
+            ? bcadd($this->value, $normalized, $this->getScale())
+            : (string)($this->value + $normalized);
         return $this;
     }
 
     /**
      * 减法
+     * @param string|int|float $number
+     * @return self
      */
     public function sub($number): self
     {
         $this->ensureMutable();
-        $this->base = $this->bcSub($this->base, $this->normalizeNumber($number));
+        $normalized = $this->normalize($number);
+        $this->value = self::$useBcMath
+            ? bcsub($this->value, $normalized, $this->getScale())
+            : (string)($this->value - $normalized);
         return $this;
     }
 
     /**
      * 乘法
+     * @param string|int|float $number
+     * @return self
      */
-    public function multiplication($number): self
+    public function mul($number): self
     {
         $this->ensureMutable();
-        $this->base = $this->bcMul($this->base, $this->normalizeNumber($number));
+        $normalized = $this->normalize($number);
+        $this->value = self::$useBcMath
+            ? bcmul($this->value, $normalized, $this->getScale())
+            : (string)($this->value * $normalized);
         return $this;
     }
 
     /**
      * 除法
-     *
-     * @throws InvalidArgumentException 当除数为0时
+     * @param string|int|float $number
+     * @return self
+     * @throws InvalidArgumentException
      */
-    public function division($number): self
+    public function div($number): self
     {
         $this->ensureMutable();
-        $this->base = $this->bcDiv($this->base, $this->normalizeNumber($number));
-        return $this;
-    }
+        $normalized = $this->normalize($number);
 
-    /**
-     * 处理负数 - 如果当前值为负数则设置为0
-     */
-    public function negativeNumber(): self
-    {
-        $this->ensureMutable();
-        if (bccomp($this->base, '0', $this->getBcScale()) < 0) {
-            $this->base = '0';
-        }
-        return $this;
-    }
-
-    /**
-     * 绝对值
-     */
-    public function abs(): self
-    {
-        $this->ensureMutable();
-        $this->base = ltrim($this->base, '-');
-        return $this;
-    }
-
-    /**
-     * 幂运算
-     */
-    public function power($exponent): self
-    {
-        $this->ensureMutable();
-        $exponent = $this->normalizeNumber($exponent);
-
-        if (self::$useBcMath) {
-            $result = '1';
-            $isNegative = str_starts_with($exponent, '-');
-            $exponent = ltrim($exponent, '-');
-
-            // 简单实现幂运算
-            for ($i = 0; bccomp($exponent, '0', $this->getBcScale()) > 0; $i++) {
-                $exponent = $this->bcSub($exponent, '1');
-                $result = $this->bcMul($result, $this->base);
-            }
-
-            if ($isNegative) {
-                $result = $this->bcDiv('1', $result);
-            }
-
-            $this->base = $result;
-        } else {
-            $this->base = (string)pow((float)$this->base, (float)$exponent);
+        if ($normalized === '0') {
+            throw new InvalidArgumentException('除数不能为零');
         }
 
+        $this->value = self::$useBcMath
+            ? bcdiv($this->value, $normalized, $this->getScale())
+            : (string)($this->value / $normalized);
         return $this;
     }
 
-    /**
-     * 平方根
-     *
-     * @throws InvalidArgumentException 当基数为负数时
-     */
-    public function sqrt(): self
-    {
-        $this->ensureMutable();
-
-        if (bccomp($this->base, '0', $this->getBcScale()) < 0) {
-            throw new InvalidArgumentException('不能对负数开平方根');
-        }
-
-        if (self::$useBcMath) {
-            // 使用牛顿迭代法近似计算平方根
-            $x = $this->base;
-            $guess = $this->bcDiv($x, '2');
-
-            for ($i = 0; $i < 100; $i++) {
-                $newGuess = $this->bcDiv(
-                    $this->bcAdd($guess, $this->bcDiv($x, $guess)),
-                    '2'
-                );
-
-                if (bccomp($newGuess, $guess, $this->getBcScale()) === 0) {
-                    break;
-                }
-
-                $guess = $newGuess;
-            }
-
-            $this->base = $guess;
-        } else {
-            $this->base = (string)sqrt((float)$this->base);
-        }
-
-        return $this;
-    }
+    // ------- 工具方法 -------
 
     /**
-     * 百分比计算 (返回基数乘以百分比后的值)
-     *
-     * @example Calculation::init(100)->percentage(50)->getResult() => 50
-     */
-    public function percentage($percent): self
-    {
-        $this->ensureMutable();
-        $percent = $this->normalizeNumber($percent);
-        $this->base = $this->bcMul(
-            $this->base,
-            $this->bcDiv($percent, '100')
-        );
-        return $this;
-    }
-
-    /**
-     * 取倒数
-     *
-     * @throws InvalidArgumentException 当基数为零时
-     */
-    public function inverse(): self
-    {
-        $this->ensureMutable();
-
-        if ($this->base === '0') {
-            throw new InvalidArgumentException('零没有倒数');
-        }
-
-        $this->base = $this->bcDiv('1', $this->base);
-        return $this;
-    }
-
-    /**
-     * 数组求和（保持精度）
-     *
-     * @param array $numbers 数字数组
+     * 计算数组总和
+     * @param array $numbers 数值数组
      * @return self
      */
     public static function sum(array $numbers): self
     {
         $sum = '0';
+        $calculator = new self('0');
+
         foreach ($numbers as $number) {
-            $number = (new self($sum))->normalizeNumber($number);
-            $sum = (new self($sum))->add($number)->getRawValue();
+            $sum = $calculator->add($number)->getValue();
         }
+
         return new self($sum);
     }
 
     /**
-     * 获取原始值（不四舍五入）
+     * 获取原始值（字符串形式）
+     * @return string
      */
-    public function getRawValue(): string
+    public function getValue(): string
     {
-        return $this->base;
+        return $this->value;
     }
 
     /**
-     * 获取结果
-     *
-     * @param int $precision 保留小数位数，默认为2
-     * @param bool $roundUp 是否向上取整（默认四舍五入）
+     * 获取格式化结果
+     * @param int $decimals 小数位数
+     * @return string
+     * @throws InvalidArgumentException
      */
-    public function getResult(int $precision = 2, bool $roundUp = false): string
+    public function getResult(int $decimals = 2): string
     {
-        if ($precision < 0) {
-            throw new InvalidArgumentException('精度不能为负数');
+        if ($decimals < 0) {
+            throw new InvalidArgumentException('小数位数不能为负数');
         }
 
-        $value = $this->base;
+        $value = $this->value;
 
-        // 处理科学计数法
-        if (preg_match('/[Ee]/', $value)) {
-            $value = sprintf('%.'.$precision.'F', $value);
-        }
-
-        // 如果没有小数部分，直接返回整数形式
-        if (strpos($value, '.') === false) {
-            return $value;
-        }
-
-        // 处理精度
-        $parts = explode('.', $value, 2);
-        $integerPart = $parts[0];
-        $decimalPart = $parts[1] ?? '';
-
-        // 如果不需要小数部分，返回整数
-        if ($precision === 0) {
-            return $integerPart;
-        }
-
-        // 截断或四舍五入
-        if (strlen($decimalPart) > $precision) {
-            if ($roundUp) {
-                // 向上取整
-                $rounded = $this->bcAdd(
-                    $value,
-                    '0.' . str_repeat('0', $precision) . '1'
-                );
-                $rounded = substr($rounded, 0, strpos($rounded, '.') + $precision + 1);
-            } else {
-                // 四舍五入
-                if (self::$useBcMath) {
-                    $rounded = bcadd(
-                        $value,
-                        '0.' . str_repeat('0', $precision) . '5',
-                        $precision + 1
-                    );
-                    $rounded = substr($rounded, 0, strpos($rounded, '.') + $precision + 1);
-                } else {
-                    $rounded = round((float)$value, $precision, PHP_ROUND_HALF_UP);
-                    $rounded = sprintf('%.'.$precision.'F', $rounded);
-                }
-            }
-
-            // 去除可能的小数点后多余的零
-            $rounded = rtrim($rounded, '0');
-            $rounded = rtrim($rounded, '.') ?: '0';
-
-            return $rounded;
-        }
-
-        // 如果小数部分不足精度要求，补零
-        if ($precision > 0) {
-            $decimalPart = str_pad($decimalPart, $precision, '0', STR_PAD_RIGHT);
-            return $integerPart . '.' . $decimalPart;
-        }
-
-        return $value;
-    }
-    /**
-     * 格式化为货币字符串
-     */
-    public function toCurrency(string $decimalSeparator = '.', string $thousandsSeparator = ','): string
-    {
-        $value = $this->getResult(2);
-
-        // 处理负号
-        $sign = '';
-        if (strpos($value, '-') === 0) {
-            $sign = '-';
-            $value = substr($value, 1);
-        }
-
-        // 分割整数和小数部分
-        $parts = explode('.', $value, 2);
-        $integerPart = $parts[0];
-        $decimalPart = $parts[1] ?? '';
-
-        // 添加千位分隔符
-        if ($thousandsSeparator !== '') {
-            $integerPart = number_format((int)$integerPart, 0, '', $thousandsSeparator);
-        }
-
-        // 组合结果
-        $result = $sign . $integerPart;
-        if ($decimalPart !== '') {
-            $result .= $decimalSeparator . $decimalPart;
-        }
-
-        return $result;
+        // 普通模式使用 number_format
+        return number_format((float)$value, $decimals, '.', '');
     }
 
+    // ------- 接口实现 -------
+
     /**
-     * 实现 JsonSerializable 接口
+     * JsonSerializable 接口方法
+     * @return array
      */
     public function jsonSerialize(): array
     {
         return [
-            'raw_value' => $this->getRawValue(),
-            'rounded_value' => $this->getResult(),
-            'formatted_value' => $this->toCurrency()
+            'value' => $this->getValue(),
+            'result' => $this->getResult(),
         ];
     }
 
     /**
-     * 静态魔术方法调用
-     */
-    public static function __callStatic(string $name, array $arguments): self
-    {
-        if ($name === 'init' || $name === 'sum') {
-            if (!isset($arguments[0])) {
-                throw new InvalidArgumentException('初始化需要提供一个数字参数');
-            }
-            return self::$name($arguments[0]);
-        }
-
-        throw new RuntimeException("静态方法 [{$name}] 不存在");
-    }
-
-    /**
-     * 动态魔术方法调用（已废弃，保留兼容性）
-     *
-     * @deprecated 建议直接使用定义好的方法
-     */
-    public function __call(string $name, array $arguments): self
-    {
-        if (!in_array($name, self::ALLOWED_METHODS)) {
-            throw new RuntimeException("方法 [{$name}] 不存在或不允许调用");
-        }
-
-        if (empty($arguments)) {
-            throw new InvalidArgumentException("方法 [{$name}] 需要至少一个参数");
-        }
-
-        // 保持向后兼容性
-        return $this->{$name}($arguments[0]);
-    }
-
-    /**
-     * 克隆方法 - 创建计算器的副本
+     * 魔术方法：克隆时解冻对象
      */
     public function __clone()
     {
-        $this->frozen = false; // 克隆后解除冻结状态
+        $this->frozen = false;
     }
 
     /**
-     * 转换为字符串
+     * 魔术方法：直接输出结果
+     * @return string
      */
     public function __toString(): string
     {
