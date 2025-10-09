@@ -24,7 +24,7 @@
     "php": ">=7.3",
     "ext-bcmath": "*",
     "ext-json": "*",
-    "darkaonline/l5-swagger": "^8.6",
+    "darkaonline/l5-swagger": "^8.0.2",
     "guzzlehttp/guzzle": "^7.0",
     "laravel/framework": "^8.0",
     "laravel/helpers": ">=1.3"
