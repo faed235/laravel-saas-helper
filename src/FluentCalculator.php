@@ -135,7 +135,7 @@ class FluentCalculator implements JsonSerializable
      * @param string|int|float $number
      * @return self
      */
-    public function mul($number): self
+    public function multiplication($number): self
     {
         $this->ensureMutable();
         $normalized = $this->normalize($number);
