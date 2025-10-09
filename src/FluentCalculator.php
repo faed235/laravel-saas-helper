@@ -364,8 +364,8 @@ class FluentCalculator implements JsonSerializable
             $value = sprintf('%.'.$precision.'F', $value);
         }
 
-        // 如果没有小数部分，直接返回
-        if (!strpos($value, '.')) {
+        // 如果没有小数部分，直接返回整数形式
+        if (strpos($value, '.') === false) {
             return $value;
         }
 
@@ -373,6 +373,11 @@ class FluentCalculator implements JsonSerializable
         $parts = explode('.', $value, 2);
         $integerPart = $parts[0];
         $decimalPart = $parts[1] ?? '';
+
+        // 如果不需要小数部分，返回整数
+        if ($precision === 0) {
+            return $integerPart;
+        }
 
         // 截断或四舍五入
         if (strlen($decimalPart) > $precision) {
@@ -405,10 +410,14 @@ class FluentCalculator implements JsonSerializable
             return $rounded;
         }
 
-        // 补零
+        // 如果小数部分不足精度要求，补零
+        if ($precision > 0) {
+            $decimalPart = str_pad($decimalPart, $precision, '0', STR_PAD_RIGHT);
+            return $integerPart . '.' . $decimalPart;
+        }
+
         return $value;
     }
-
     /**
      * 格式化为货币字符串
      */
