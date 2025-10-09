@@ -151,7 +151,7 @@ class FluentCalculator implements JsonSerializable
      * @return self
      * @throws InvalidArgumentException
      */
-    public function div($number): self
+    public function division($number): self
     {
         $this->ensureMutable();
         $normalized = $this->normalize($number);
