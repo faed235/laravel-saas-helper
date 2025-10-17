@@ -7,7 +7,7 @@ class AppendRequestIdProcessor
         $logger->pushProcessor(function ($record) {
             // 从请求属性中获取 request_id
             $requestId = self::getOrSet();
-            $record['message'] = '['.$requestId.']'.$record['message'];
+            $record['message'] = '['.$requestId.'] '.$record['message'];
             return $record;
         });
     }
