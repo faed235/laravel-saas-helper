@@ -7,8 +7,6 @@ use Faed\LaravelSaasHelper\notice\Wechat;
 use Illuminate\Http\Request;
 use Closure;
 use Illuminate\Support\Facades\Log;
-
-
 class HttpLogMiddleware
 {
     protected const SLOW_REQUEST_THRESHOLD = 3.0; // 慢请求阈值（秒）
