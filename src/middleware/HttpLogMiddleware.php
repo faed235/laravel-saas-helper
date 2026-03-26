@@ -13,7 +13,11 @@ class HttpLogMiddleware
     protected const SLOW_REQUEST_THRESHOLD = 3.0; // 慢请求阈值（秒）
     public function handle(Request $request, Closure $next){
         $startTime = microtime(true);
-        $userId = auth()->id();
+        try {
+            $userId = auth()->payload()->get('sub');
+        }catch (\Exception $exception){
+            $userId = 0;
+        };
         $additionalData = $this->getAdditionalRequestData($request); // 获取额外参数
 
 
